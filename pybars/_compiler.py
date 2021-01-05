@@ -90,10 +90,11 @@ alt_inner ::= <spaces> ('^' | 'e' 'l' 's' 'e') <spaces> <finish>
 partial ::= <start> '>' <partial_inner>:i => ('partial',) + i
 path ::= ~('/') <pathseg>+:segments => ('path', segments)
 kwliteral ::= <safesymbol>:s '=' (<literal>|<path>|<subexpression>):v => ('kwparam', s, v)
-literal ::= (<string>|<integer>|<boolean>|<null>|<undefined>):thing => ('literalparam', thing)
+literal ::= (<string>|<float>|<integer>|<boolean>|<null>|<undefined>):thing => ('literalparam', thing)
 string ::= '"' <notdquote>*:ls '"' => u'"' + u''.join(ls) + u'"'
     | "'" <notsquote>*:ls "'" => u"'" + u''.join(ls) + u"'"
 integer ::= '-'?:sign <digit>+:ds => int((sign if sign else '') + ''.join(ds))
+float ::= '-'?:sign <digit>+:ds '.':ss <digit>+:fs => float((sign if sign else '') + ''.join(ds) + ss + ''.join(fs))
 boolean ::= <false>|<true>
 false ::= 'f' 'a' 'l' 's' 'e' => False
 true ::= 't' 'r' 'u' 'e' => True
