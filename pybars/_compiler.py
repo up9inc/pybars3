@@ -321,6 +321,8 @@ def resolve(context, *segments):
             context = context.get(segment)
         else:
             context = pick(context, segment)
+    if len(segments) == 1:
+        context = '{{%s}}' % segments[0]
     return context
 
 
@@ -632,7 +634,7 @@ class CodeBuilder:
             self._result.grow([
                 u"    value = helpers.get(u'%s')\n" % realname,
                 u"    if value is None:\n"
-                u"        value = resolve(context, u'%s')\n" % path,
+                u"        raise pybars.PybarsError(u'Undefined helper: %s')\n" % realname,
                 ])
         else:
             realname = None
