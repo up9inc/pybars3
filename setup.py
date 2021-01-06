@@ -19,27 +19,27 @@
 from distutils.core import setup
 
 
-setup(name='pybars3',
-      version='0.9.7',
-      description='Handlebars.js templating for Python 3 and 2',
-      long_description='Documentation is maintained at https://github.com/wbond/pybars3#readme',
-      author='wbond, mjumbewu',
-      author_email='will@wbond.net, mjumbewu@gmail.com',
-      url='https://github.com/wbond/pybars3',
-      packages=['pybars', 'pybars._templates'],
-      package_dir={'': '.'},
-      classifiers=[
-          'Development Status :: 4 - Beta',
-          'Intended Audience :: Developers',
-          'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
-          'Operating System :: OS Independent',
-          'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.7',
-          'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.3',
-          'Programming Language :: Python :: 3.4'
-          ],
-      install_requires=[
-          'PyMeta3>=0.5.1',
-          ],
-      )
+setup(name='pybars4',
+    version='0.9.7',
+    description='Handlebars.js templating for Python 3 and 2',
+    long_description='Documentation is maintained at https://github.com/up9inc/pybars4#readme',
+    author='wbond, mjumbewu mehmet',
+    author_email='will@wbond.net, mjumbewu@gmail.com, mehmet@up9.com',
+    url='https://github.com/up9inc/pybars4',
+    packages=['pybars', 'pybars._templates'],
+    package_dir={'': '.'},
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4'
+    ],
+    install_requires=[
+        'PyMeta3>=0.5.1',
+    ],
+)

@@ -484,7 +484,7 @@ class FunctionContainer:
             u'import pybars\n'
             u'\n'
             u'if pybars.__version__ != %s:\n'
-            u'    raise pybars.PybarsError("This template was precompiled with pybars3 version %s, running version %%s" %% pybars.__version__)\n'
+            u'    raise pybars.PybarsError("This template was precompiled with pybars4 version %s, running version %%s" %% pybars.__version__)\n'
             u'\n'
             u'from pybars import strlist, Scope, PybarsError\n'
             u'from pybars._compiler import _pybars_, escape, resolve, resolve_subexpr, prepare, ensure_scope\n'

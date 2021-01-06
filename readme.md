@@ -1,16 +1,16 @@
-# pybars3 - Handlebars.js for Python 3 and 2
+# pybars4 - Handlebars.js for Python 3 and 2
 
-[![Build Status](https://travis-ci.org/wbond/pybars3.svg?branch=master)](https://travis-ci.org/wbond/pybars3)
-[![Codecov](https://codecov.io/gh/wbond/pybars3/branch/master/graph/badge.svg)](https://codecov.io/gh/wbond/pybars3)
+[![Build Status](https://travis-ci.org/up9inc/pybars4.svg?branch=master)](https://travis-ci.org/up9inc/pybars4)
+[![Codecov](https://codecov.io/gh/up9inc/pybars4/branch/master/graph/badge.svg)](https://codecov.io/gh/up9inc/pybars4)
 
-Pybars3 provides a template system for Python which is compatible with
+Pybars4 provides a template system for Python which is compatible with
 Handlebars.js. It is a fork of the pybars project that adds Python 3
 compatibility and numerous features from Handlebars.js 2.0.
 
 ## Installation
 
 ```bash
-pip install pybars3
+pip install pybars4
 ```
 
 ## Handlebars.js Compatibility
