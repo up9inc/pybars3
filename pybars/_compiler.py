@@ -645,9 +645,12 @@ class CodeBuilder:
             self._result.grow(
                 u"    elif value is None:\n"
                 u"        value = helpers['helperMissing'](context, u'%s'%s\n"
+                    % (realname, call)
+                )
+        self._result.grow(
                 u"    if value is None:\n"
                 u"        raise PybarsError(u'Could not find variable %s')\n"
-                    % (realname, call, realname)
+                    % (realname)
                 )
 
     def add_escaped_expand(self, path_type_path, arguments):
