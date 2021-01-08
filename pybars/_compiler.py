@@ -159,7 +159,7 @@ partial ::= ["partial" <complexarg>:symbol [<arg>*:arguments]] => builder.add_pa
 path ::= [ "path" [<pathseg>:segment]] => ("simple", segment)
  | [ "path" [<pathseg>+:segments] ] => ("complex", u"resolve(context, u'" + u"', u'".join(segments) + u"')" )
 complexarg ::= [ "path" [<pathseg>+:segments] ] => u"resolve(context, u'" + u"', u'".join(segments) + u"')"
-    | [ "subexpr" ["path" <pathseg>:name] [<arg>*:arguments] ] => u'resolve_subexpr(helpers, "' + name + '", context' + (u', ' + u', '.join(arguments) if arguments else u'') + u')'
+    | [ "subexpr" ["path" <anything>:name] [<arg>*:arguments] ] => u'resolve_subexpr(helpers, "' + '.'.join(name) + '", context' + (u', ' + u', '.join(arguments) if arguments else u'') + u')'
     | [ "literalparam" <anything>:value ] => {str_class}(value)
 arg ::= [ "kwparam" <anything>:symbol <complexarg>:a ] => {str_class}(symbol) + '=' + a
     | <complexarg>
@@ -326,7 +326,22 @@ def resolve(context, *segments):
 
 def resolve_subexpr(helpers, name, context, *args, **kwargs):
     if name not in helpers:
-        raise PybarsError(u"Could not find property %s" % (name,))
+        segments = name.split('..')
+
+        if context is None or len(segments) < 2:
+            raise PybarsError(u"Could not find property %s" % (name,))
+
+        ref = None
+        if type(context) in (list, tuple):
+            ref = context[segments[0]]
+        elif isinstance(context, Scope):
+            ref = context.get(segments[0])
+
+        for segment in segments[1:]:
+            ref = getattr(ref, segment)
+
+        return ref(context, *args, **kwargs)
+
     return helpers[name](context, *args, **kwargs)
 
 
