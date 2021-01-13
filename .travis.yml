@@ -8,26 +8,19 @@ sudo: false
 cache:
   pip: true
 
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "nightly"
-  - "pypy"
-
 install:
-  - pip install PyMeta3 -q
-  - pip install coverage -q
-  - pip install codecov -q
-  - pip install flake8 -q
-
-  - pip --version
-  - flake8 --version
+  - pip install PyMeta3 coverage codecov flake8
 
 script:
-  - flake8
   - coverage run tests.py
+  - flake8
+
+after_success:
   - codecov
+  
+deploy:
+  edge: true  # use latest v2 deploy
+  provider: pypi
+  #  skip_cleanup: true
+  on:
+    tags: true
