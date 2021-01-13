@@ -1,4 +1,4 @@
-# pybars4 - Handlebars.js for Python 3 and 2
+# pybars4 - Handlebars.js for Python 3
 
 [![Build Status](https://travis-ci.org/up9inc/pybars4.svg?branch=master)](https://travis-ci.org/up9inc/pybars4)
 [![Codecov](https://codecov.io/gh/up9inc/pybars4/branch/master/graph/badge.svg)](https://codecov.io/gh/up9inc/pybars4)
