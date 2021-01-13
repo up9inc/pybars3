@@ -2,6 +2,10 @@
 # http://about.travis-ci.org/docs/
 
 language: python
+branches:
+  only:
+    - master
+    - /(\d+\.?)+/
 
 sudo: false
 
