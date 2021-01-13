@@ -478,7 +478,7 @@ class TestAcceptance(TestCase):
         template = u"test: {{.}}"
         result = u"test: "
 
-        self.assertRender(template, None, result, helpers)
+        self.assertRender(template, None, result, helpers, error='Could not find variable ')
 
     def test_complex_but_empty_paths(self):
         template = u"{{person/name}}"
@@ -489,7 +489,7 @@ class TestAcceptance(TestCase):
         }
         result = u""
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable None')
 
         template = u"{{person/name}}"
         context = {
@@ -497,7 +497,7 @@ class TestAcceptance(TestCase):
         }
         result = u""
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable None')
 
     def test_this_keyword_in_paths_simple(self):
         template = u"{{#goodbyes}}{{this}}{{/goodbyes}}"
@@ -548,9 +548,9 @@ class TestAcceptance(TestCase):
         self.assertRender(template, context, result, helpers=helpers)
 
     def test_pass_number_literal(self):
-        self.assertRender(u"{{12}}", {}, u"")
+        self.assertRender(u"{{12}}", {}, u"", error='Could not find variable 12')
         self.assertRender(u"{{12}}", {'12': 'bar'}, u"bar")
-        self.assertRender(u"{{12.34}}", {}, u"")
+        self.assertRender(u"{{12.34}}", {}, u"", error='Could not find variable None')
         # FIXME the two cases below currently fail, it is also the case for non-numeric variables
         # self.assertRender(u"{{12.34}}", {'12.34': 'bar'}, u"bar")
         # def func(this, arg):
@@ -558,8 +558,8 @@ class TestAcceptance(TestCase):
         # self.assertRender(u"{{12.34 1}}", {'12.34': func}, u"bar1")
 
     def test_pass_boolean_literal(self):
-        self.assertRender(u"{{true}}", {}, u"")
-        self.assertRender(u"{{true}}", {'': 'foo'}, u"")
+        self.assertRender(u"{{true}}", {}, u"", error='Could not find variable true')
+        self.assertRender(u"{{true}}", {'': 'foo'}, u"", error='Could not find variable true')
         self.assertRender(u"{{false}}", {'false': 'foo'}, u"foo")
 
     def test_inverted_sections(self):
@@ -1584,7 +1584,7 @@ class TestAcceptance(TestCase):
         }
         result = u""
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable var')
 
     def test_none_unescaped(self):
         template = u"{{{var}}}"
@@ -1593,7 +1593,7 @@ class TestAcceptance(TestCase):
         }
         result = u""
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable var')
 
     def test_null(self):
 
@@ -1821,7 +1821,7 @@ class TestAcceptance(TestCase):
         context = {}
         result = u"ab"
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable missing')
 
     def test_default_helperMissing_with_param(self):
         template = u"a{{missing something}}b"
@@ -2130,7 +2130,7 @@ class TestAcceptance(TestCase):
         }
         result = u"0. goodbye! 0 1 2 After 0 1. Goodbye! 0 1 2 After 1 2. GOODBYE! 0 1 2 After 2 cruel world!"
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable @index')
 
     def test_each_with_parent_index(self):
         template = u"{{#each people}}{{#each foods}}{{../name}}({{@../index}}) likes {{name}}({{@index}}), {{/each}}{{/each}}"
@@ -2167,7 +2167,7 @@ class TestAcceptance(TestCase):
         original_log = pybars.log
         pybars.log = log.append
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable log')
         self.assertEqual(["whee"], log)
 
         pybars.log = original_log
@@ -2176,7 +2176,7 @@ class TestAcceptance(TestCase):
         # log implementation and test are just stubs
         template = u"{{log '123'}}"
         result = ''
-        self.assertRender(template, {}, result)
+        self.assertRender(template, {}, result, error='Could not find variable log')
 
     def test_overriding_property_lookup(self):
         pass
@@ -2353,7 +2353,7 @@ class TestAcceptance(TestCase):
         }
         result = ''
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable lookup')
 
     def test_should_not_fail_on_unavailable_value(self):
         template = u'{{lookup thelist 3}}.{{lookup theobject "qux"}}.{{lookup thenumber 0}}'
@@ -2369,7 +2369,7 @@ class TestAcceptance(TestCase):
         }
         result = '..'
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable lookup')
 
     def test_should_lookup_content_by_special_variables(self):
         template = u'{{#each goodbyes}}{{lookup ../data @index}}{{/each}}'
@@ -2404,7 +2404,7 @@ class TestAcceptance(TestCase):
         }
         result = u"The origin of speciesCharles DarwinLazarillo de Tormes"
 
-        self.assertRender(template, context, result)
+        self.assertRender(template, context, result, error='Could not find variable None')
 
     def test_inverted_sections_print_when_they_shouldnt(self):
         template = u"{{^set}}not set{{/set}} :: {{#set}}set{{/set}}"
