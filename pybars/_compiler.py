@@ -663,10 +663,10 @@ class CodeBuilder:
                     % (realname, call)
                 )
         self._result.grow(
-                u"    if value is None:\n"
-                u"        raise PybarsError(u'Could not find variable %s')\n"
-                    % (realname)
-                )
+            u"    if value is None:\n"
+            u"        raise PybarsError(u'Could not find variable %s')\n"
+                % (realname)
+            )
 
     def add_escaped_expand(self, path_type_path, arguments):
         (path_type, path) = path_type_path
