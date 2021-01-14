@@ -309,7 +309,7 @@ def resolve(context, *segments):
             carryover_data = True
 
         if context is None:
-            return None
+            return (None, segments)
         if segment in (None, ""):
             continue
         if type(context) in (list, tuple):
@@ -321,6 +321,8 @@ def resolve(context, *segments):
             context = context.get(segment)
         else:
             context = pick(context, segment)
+    if context is None:
+        return (None, segments)
     return context
 
 
@@ -663,9 +665,11 @@ class CodeBuilder:
                     % (realname, call)
                 )
         self._result.grow(
-            u"    if value is None:\n"
-            u"        raise PybarsError(u'Could not find variable %s')\n"
-                % (realname)
+            u"    if isinstance(value, tuple) and value[0] is None:\n"
+            u"        if len(value[1]) < 2:\n"
+            u"            raise PybarsError(u'Could not find variable `%s`' % value[1][0])\n"
+            u"        else:\n"
+            u"            raise PybarsError(u'Could not find object attribute `%s`' % '.'.join(value[1]).replace('..', '.'))\n"
             )
 
     def add_escaped_expand(self, path_type_path, arguments):
