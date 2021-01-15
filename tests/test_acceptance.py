@@ -41,7 +41,7 @@ from pybars import (
     PybarsError,
     Compiler
     )
-from .test__compiler import render
+from tests.test__compiler import render
 
 
 class TestAcceptance(TestCase):
