@@ -1068,9 +1068,7 @@ class TestAcceptance(TestCase):
     def test_nested_block_helpers(self):
 
         def link(this, options):
-            return (
-                    "<a href='" + this['name'] + "'>"
-                    + str(options['fn'](this)) + "</a>")
+            return "<a href='" + this['name'] + "'>" + str(options['fn'](this)) + "</a>"
 
         def form(this, options, context):
             return "<form>" + str(options['fn'](context)) + "</form>"
