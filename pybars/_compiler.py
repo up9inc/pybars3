@@ -15,7 +15,6 @@
 # GNU Lesser General Public License version 3 (see the file LICENSE).
 
 """The compiler for pybars."""
-
 import re
 import sys
 from types import ModuleType
@@ -157,8 +156,8 @@ invertedblock ::= [ "invertedblock" <anything>:symbol [<arg>*:arguments] [<compi
 rawblock ::= [ "rawblock" <anything>:symbol [<arg>*:arguments] <anything>:raw ] => builder.add_rawblock(symbol, arguments, raw)
 partial ::= ["partial" <complexarg>:symbol [<arg>*:arguments]] => builder.add_partial(symbol, arguments)
 path ::= [ "path" [<pathseg>:segment]] => ("simple", segment)
- | [ "path" [<pathseg>+:segments] ] => ("complex", u"resolve(context, u'" + u"', u'".join(segments) + u"')" )
-complexarg ::= [ "path" [<pathseg>+:segments] ] => u"resolve(context, u'" + u"', u'".join(segments) + u"')"
+ | [ "path" [<pathseg>+:segments] ] => ("complex", u"resolve(context, problems, u'" + u"', u'".join(segments) + u"')" )
+complexarg ::= [ "path" [<pathseg>+:segments] ] => u"resolve(context, problems, u'" + u"', u'".join(segments) + u"')"
     | [ "subexpr" ["path" <anything>:name] [<arg>*:arguments] ] => u'resolve_subexpr(helpers, "' + '.'.join(name) + '", context' + (u', ' + u', '.join(arguments) if arguments else u'') + u')'
     | [ "literalparam" <anything>:value ] => {str_class}(value)
 arg ::= [ "kwparam" <anything>:symbol <complexarg>:a ] => {str_class}(symbol) + '=' + a
@@ -291,7 +290,7 @@ class Scope:
         return unicode(self.context)  # noqa: F821 undefined name 'unicode'
 
 
-def resolve(context, *segments):
+def resolve(context, problems, *segments):
     carryover_data = False
 
     # This makes sure that bare "this" paths don't return a Scope object
@@ -309,7 +308,8 @@ def resolve(context, *segments):
             carryover_data = True
 
         if context is None:
-            return (None, segments)
+            problems.extend(segments)
+            return None
         if segment in (None, ""):
             continue
         if type(context) in (list, tuple):
@@ -321,8 +321,10 @@ def resolve(context, *segments):
             context = context.get(segment)
         else:
             context = pick(context, segment)
+
     if context is None:
-        return (None, segments)
+        problems.extend(segments)
+
     return context
 
 
@@ -553,6 +555,7 @@ class CodeBuilder:
             ])
         else:
             self._result.grow(u"def %s(context, helpers, partials, root):\n" % function_name)
+        self._result.grow(u"    problems = []\n")
         self._result.grow(u"    result = strlist()\n")
         self._result.grow(u"    context = ensure_scope(context, root)\n")
 
@@ -617,7 +620,8 @@ class CodeBuilder:
         self._result.grow([
             u"    value = helper = helpers.get(u'%s')\n" % symbol,
             u"    if value is None:\n"
-            u"        value = resolve(context, u'%s')\n" % symbol,
+            u"        problems = []\n",
+            u"        value = resolve(context, problems, u'%s')\n" % symbol,
             u"    if helper and hasattr(helper, '__call__'):\n"
             u"        value = helper(context, options%s\n" % call,
             u"    else:\n"
@@ -649,7 +653,8 @@ class CodeBuilder:
             self._result.grow([
                 u"    value = helpers.get(u'%s')\n" % realname,
                 u"    if value is None:\n"
-                u"        value = resolve(context, u'%s')\n" % path,
+                u"        problems = []\n",
+                u"        value = resolve(context, problems, u'%s')\n" % path,
                 ])
         else:
             realname = None
@@ -665,11 +670,11 @@ class CodeBuilder:
                     % (realname, call)
                 )
         self._result.grow(
-            u"    if isinstance(value, tuple) and value[0] is None:\n"
-            u"        if len(value[1]) < 2:\n"
-            u"            raise PybarsError(u'Could not find variable `%s`' % value[1][0])\n"
+            u"    if value is None and problems:\n"
+            u"        if len(problems) == 1:\n"
+            u"            raise PybarsError(u'Could not find variable %r' % problems[0])\n"
             u"        else:\n"
-            u"            raise PybarsError(u'Could not find object attribute `%s`' % '.'.join(value[1]).replace('..', '.'))\n"
+            u"            raise PybarsError(u'Could not find object attribute %r' % '.'.join(problems).replace('..', '.'))\n"
             )
 
     def add_escaped_expand(self, path_type_path, arguments):
@@ -719,7 +724,8 @@ class CodeBuilder:
         self._result.grow([
             u"    value = helper = helpers.get(u'%s')\n" % symbol,
             u"    if value is None:\n"
-            u"        value = resolve(context, u'%s')\n" % symbol,
+            u"        problems = []\n",
+            u"        value = resolve(context, problems, u'%s')\n" % symbol,
             u"    if helper and hasattr(helper, '__call__'):\n"
             u"        value = helper(context, options%s\n" % call,
             u"    else:\n"
