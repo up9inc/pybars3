@@ -1,5 +1,13 @@
 # changelog
 
+## 0.9.9
+
+- Fix the error message for the undefined object attributes
+
+## 0.9.8
+
+- Add the missing context(objects) support to subexpressions
+
 ## 0.9.7
 
 - Add support for whitespace control, `{{var~}}` (Handlebars 1.1)
