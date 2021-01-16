@@ -15,14 +15,7 @@
 
 """Tests for the pybars compiler."""
 
-try:
-    str_class = unicode
-except NameError:
-    # Python 3 support
-    str_class = str
-
 import sys
-
 from unittest import TestCase
 
 from pybars import Compiler
@@ -38,8 +31,9 @@ def render(source, context, helpers=None, partials=None, knownHelpers=None,
         real_partials = None
     else:
         real_partials = dict((key, compiler.compile(value))
-            for key, value in list(partials.items()))
-    return str_class(template(context, helpers=helpers, partials=real_partials))
+                             for key, value in list(partials.items()))
+    result = template(context, helpers=helpers, partials=real_partials)
+    return str(result)
 
 
 class TestCompiler(TestCase):
@@ -49,7 +43,6 @@ class TestCompiler(TestCase):
         pybars.Compiler
 
     def test_smoke(self):
-
         def _list(this, options, items):
             result = ['<ul>']
             for thing in items:
@@ -128,7 +121,9 @@ class TestCompiler(TestCase):
         compiler = Compiler()
 
         # compile and check that speficified path is used
-        self.assertEqual(result, compiler.compile(template, path=path)(context))
+        compiler_compile = compiler.compile(template, path=path)
+        second = compiler_compile(context)
+        self.assertEqual(result, second)
         self.assertTrue(sys.modules.get('pybars._templates._project_widgets_templates') is not None)
 
         # recompile and check that a new path is used

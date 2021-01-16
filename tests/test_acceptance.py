@@ -22,17 +22,9 @@
 # THE SOFTWARE.
 
 """A port of the acceptance test for handlebars.js."""
-
-from unittest import TestCase
-
-try:
-    str_class = unicode
-except NameError:
-    # Python 3 support
-    str_class = str
-
-import sys
 import os
+import sys
+from unittest import TestCase
 
 import pybars
 from pybars import (
@@ -40,8 +32,8 @@ from pybars import (
     Scope,
     PybarsError,
     Compiler
-    )
-from .test__compiler import render
+)
+from tests.test__compiler import render
 
 
 class TestAcceptance(TestCase):
@@ -49,11 +41,10 @@ class TestAcceptance(TestCase):
     def assertRender(self, template, context, result, helpers=None, partials=None, error=None, **kwargs):
         try:
             self.assertEqual(result, render(template, context, helpers=helpers, partials=partials, **kwargs))
-        except PybarsError as e:
-            self.assertEqual(str(e), error)
-        else:
             if error:
-                self.assertTrue(False, "Was expecting an error: {}".format(error))
+                self.fail("Was expecting an error: {}".format(error))
+        except PybarsError as e:
+            self.assertEqual(error, str(e))
 
     def test_basic_context(self):
         template = u"Goodbye\n{{cruel}}\n{{world}}!"
@@ -478,7 +469,7 @@ class TestAcceptance(TestCase):
         template = u"test: {{.}}"
         result = u"test: "
 
-        self.assertRender(template, None, result, helpers, error='Could not find variable ')
+        self.assertRender(template, None, result, helpers)  # maybe spec requires error to be thrown here, not sure
 
     def test_complex_but_empty_paths(self):
         template = u"{{person/name}}"
@@ -489,7 +480,7 @@ class TestAcceptance(TestCase):
         }
         result = u""
 
-        self.assertRender(template, context, result, error='Could not find variable None')
+        self.assertRender(template, context, result, error="Could not find object attribute 'person.name'")
 
         template = u"{{person/name}}"
         context = {
@@ -497,7 +488,7 @@ class TestAcceptance(TestCase):
         }
         result = u""
 
-        self.assertRender(template, context, result, error='Could not find variable None')
+        self.assertRender(template, context, result, error="Could not find object attribute 'person.name'")
 
     def test_this_keyword_in_paths_simple(self):
         template = u"{{#goodbyes}}{{this}}{{/goodbyes}}"
@@ -528,6 +519,7 @@ class TestAcceptance(TestCase):
     def test_this_keyword_in_helpers(self):
         def helper(this, value):
             return 'bar ' + value
+
         helpers = {
             'foo': helper
         }
@@ -548,9 +540,9 @@ class TestAcceptance(TestCase):
         self.assertRender(template, context, result, helpers=helpers)
 
     def test_pass_number_literal(self):
-        self.assertRender(u"{{12}}", {}, u"", error='Could not find variable 12')
+        self.assertRender(u"{{12}}", {}, u"", error="Could not find variable '12'")
         self.assertRender(u"{{12}}", {'12': 'bar'}, u"bar")
-        self.assertRender(u"{{12.34}}", {}, u"", error='Could not find variable None')
+        self.assertRender(u"{{12.34}}", {}, u"", error="Could not find object attribute '12.34'")
         # FIXME the two cases below currently fail, it is also the case for non-numeric variables
         # self.assertRender(u"{{12.34}}", {'12.34': 'bar'}, u"bar")
         # def func(this, arg):
@@ -558,8 +550,8 @@ class TestAcceptance(TestCase):
         # self.assertRender(u"{{12.34 1}}", {'12.34': func}, u"bar1")
 
     def test_pass_boolean_literal(self):
-        self.assertRender(u"{{true}}", {}, u"", error='Could not find variable true')
-        self.assertRender(u"{{true}}", {'': 'foo'}, u"", error='Could not find variable true')
+        self.assertRender(u"{{true}}", {}, u"", error="Could not find variable 'true'")
+        self.assertRender(u"{{true}}", {'': 'foo'}, u"", error="Could not find variable 'true'")
         self.assertRender(u"{{false}}", {'false': 'foo'}, u"foo")
 
     def test_inverted_sections(self):
@@ -745,8 +737,8 @@ class TestAcceptance(TestCase):
 
         def link(this, prefix):
             return (u"<a href='" + prefix + u"/"
-                + this.get('url') + u"'>"
-                + this.get('text') + u"</a>")
+                    + this.get('url') + u"'>"
+                    + this.get('text') + u"</a>")
 
         helpers = {'link': link}
 
@@ -787,7 +779,8 @@ class TestAcceptance(TestCase):
     def test_helper_with_complex_lookup_and_nested_template(self):
 
         def link(this, options, prefix):
-            return u"<a href='" + str_class(prefix) + u"/" + this['url'] + u"'>" + str_class(options['fn'](this)) + u"</a>"
+            return u"<a href='" + str(prefix) + u"/" + this['url'] + u"'>" + str(
+                options['fn'](this)) + u"</a>"
 
         helpers = {'link': link}
 
@@ -898,7 +891,7 @@ class TestAcceptance(TestCase):
 
         def link(this, options):
             return strlist((
-                '<a href="/people/', str_class(this['id']), '">',
+                '<a href="/people/', str(this['id']), '">',
                 options['fn'](this),
                 '</a>'
             ))
@@ -951,7 +944,7 @@ class TestAcceptance(TestCase):
     def test_block_helper_passing_a_new_context(self):
 
         def form(this, options, context):
-            return "<form>" + str_class(options['fn'](context)) + '</form>'
+            return "<form>" + str(options['fn'](context)) + '</form>'
 
         helpers = {'form': form}
 
@@ -967,7 +960,7 @@ class TestAcceptance(TestCase):
 
     def test_block_helper_passing_a_complex_path_context(self):
         def form(this, options, context):
-            return u"<form>" + str_class(options['fn'](context)) + u"</form>"
+            return u"<form>" + str(options['fn'](context)) + u"</form>"
 
         helpers = {'form': form}
 
@@ -1075,12 +1068,10 @@ class TestAcceptance(TestCase):
     def test_nested_block_helpers(self):
 
         def link(this, options):
-            return (
-                "<a href='" + this['name'] + "'>"
-                + str_class(options['fn'](this)) + "</a>")
+            return "<a href='" + this['name'] + "'>" + str(options['fn'](this)) + "</a>"
 
         def form(this, options, context):
-            return "<form>" + str_class(options['fn'](context)) + "</form>"
+            return "<form>" + str(options['fn'](context)) + "</form>"
 
         helpers = {
             'link': link,
@@ -1120,12 +1111,12 @@ class TestAcceptance(TestCase):
                 out = "<ul>"
                 for thing in context:
                     out += "<li>"
-                    out += str_class(options['fn'](thing))
+                    out += str(options['fn'](thing))
                     out += "</li>"
                 out += "</ul>"
                 return out
             else:
-                return "<p>" + str_class(options['inverse'](this)) + "</p>"
+                return "<p>" + str(options['inverse'](this)) + "</p>"
 
         helpers = {'list': list}
 
@@ -1530,8 +1521,8 @@ class TestAcceptance(TestCase):
             self.assertEqual(True, bool1)
             self.assertEqual(False, bool2)
             self.assertEqual(12, times)
-            return ("Hello " + param + " " + str_class(times) + " times: "
-                + str_class(bool1) + " " + str_class(bool2))
+            return ("Hello " + param + " " + str(times) + " times: "
+                    + str(bool1) + " " + str(bool2))
 
         helpers = {'hello': hello}
 
@@ -1584,7 +1575,7 @@ class TestAcceptance(TestCase):
         }
         result = u""
 
-        self.assertRender(template, context, result, error='Could not find variable var')
+        self.assertRender(template, context, result, error="Could not find variable 'var'")
 
     def test_none_unescaped(self):
         template = u"{{{var}}}"
@@ -1593,7 +1584,7 @@ class TestAcceptance(TestCase):
         }
         result = u""
 
-        self.assertRender(template, context, result, error='Could not find variable var')
+        self.assertRender(template, context, result, error="Could not find variable 'var'")
 
     def test_null(self):
 
@@ -1729,7 +1720,7 @@ class TestAcceptance(TestCase):
         reference = "testing 1, 2, 3"
         instance = strlist([reference])
         self.assertIsInstance(instance, strlist)
-        self.assertEqual(str_class(reference), str_class(instance))
+        self.assertEqual(str(reference), str(instance))
 
     def test_if_a_context_is_not_found_helperMissing_is_used(self):
 
@@ -1759,7 +1750,7 @@ class TestAcceptance(TestCase):
 
     def test_Unknown_helper_in_knownHelpers_only_mode_should_be_passed_as_undefined(self):
         helpers = {
-            'typeof': lambda this, arg: str_class(type(arg)),
+            'typeof': lambda this, arg: str(type(arg)),
             'hello': lambda this: "foo"
         }
 
@@ -1821,7 +1812,7 @@ class TestAcceptance(TestCase):
         context = {}
         result = u"ab"
 
-        self.assertRender(template, context, result, error='Could not find variable missing')
+        self.assertRender(template, context, result, error="Could not find variable 'missing'")
 
     def test_default_helperMissing_with_param(self):
         template = u"a{{missing something}}b"
@@ -2130,7 +2121,7 @@ class TestAcceptance(TestCase):
         }
         result = u"0. goodbye! 0 1 2 After 0 1. Goodbye! 0 1 2 After 1 2. GOODBYE! 0 1 2 After 2 cruel world!"
 
-        self.assertRender(template, context, result, error='Could not find variable @index')
+        self.assertRender(template, context, result, error="Could not find variable '@index'")
 
     def test_each_with_parent_index(self):
         template = u"{{#each people}}{{#each foods}}{{../name}}({{@../index}}) likes {{name}}({{@index}}), {{/each}}{{/each}}"
@@ -2167,7 +2158,7 @@ class TestAcceptance(TestCase):
         original_log = pybars.log
         pybars.log = log.append
 
-        self.assertRender(template, context, result, error='Could not find variable log')
+        self.assertRender(template, context, result)
         self.assertEqual(["whee"], log)
 
         pybars.log = original_log
@@ -2176,7 +2167,7 @@ class TestAcceptance(TestCase):
         # log implementation and test are just stubs
         template = u"{{log '123'}}"
         result = ''
-        self.assertRender(template, {}, result, error='Could not find variable log')
+        self.assertRender(template, {}, result)
 
     def test_overriding_property_lookup(self):
         pass
@@ -2289,7 +2280,7 @@ class TestAcceptance(TestCase):
     def test_block_helpers_can_take_an_optional_hash(self):
 
         def goodbye(this, options, times, cruel):
-            return "GOODBYE " + cruel + " " + str_class(options['fn'](this)) + " " + str(times) + " TIMES"
+            return "GOODBYE " + cruel + " " + str(options['fn'](this)) + " " + str(times) + " TIMES"
 
         helpers = {'goodbye': goodbye}
 
@@ -2303,7 +2294,7 @@ class TestAcceptance(TestCase):
 
         def goodbye(this, options, cruel, _print):
             if _print is True:
-                return "GOODBYE " + cruel + " " + str_class(options['fn'](this))
+                return "GOODBYE " + cruel + " " + str(options['fn'](this))
             elif _print is False:
                 return "NOT PRINTING"
             else:
@@ -2353,7 +2344,7 @@ class TestAcceptance(TestCase):
         }
         result = ''
 
-        self.assertRender(template, context, result, error='Could not find variable lookup')
+        self.assertRender(template, context, result, error="Could not find object attribute '@_parent.bar'")
 
     def test_should_not_fail_on_unavailable_value(self):
         template = u'{{lookup thelist 3}}.{{lookup theobject "qux"}}.{{lookup thenumber 0}}'
@@ -2369,7 +2360,7 @@ class TestAcceptance(TestCase):
         }
         result = '..'
 
-        self.assertRender(template, context, result, error='Could not find variable lookup')
+        self.assertRender(template, context, result)  # was error thrown in the past
 
     def test_should_lookup_content_by_special_variables(self):
         template = u'{{#each goodbyes}}{{lookup ../data @index}}{{/each}}'
@@ -2404,7 +2395,7 @@ class TestAcceptance(TestCase):
         }
         result = u"The origin of speciesCharles DarwinLazarillo de Tormes"
 
-        self.assertRender(template, context, result, error='Could not find variable None')
+        self.assertRender(template, context, result, error="Could not find object attribute 'author.name'")
 
     def test_inverted_sections_print_when_they_shouldnt(self):
         template = u"{{^set}}not set{{/set}} :: {{#set}}set{{/set}}"
@@ -2484,7 +2475,7 @@ class TestAcceptance(TestCase):
             ],
             'hasThings': lambda this: True
         }
-        result = u"<strong>This is a slightly more complicated blah.</strong>.\nCheck this out:\n<ul>\n<li class=one>@fat</li>\n<li class=two>@dhg</li>\n<li class=three>@sayrer</li>\n</ul>.\n"    # noqa: E501
+        result = u"<strong>This is a slightly more complicated blah.</strong>.\nCheck this out:\n<ul>\n<li class=one>@fat</li>\n<li class=two>@dhg</li>\n<li class=three>@sayrer</li>\n</ul>.\n"  # noqa: E501
 
         self.assertRender(template, context, result)
 
@@ -2655,9 +2646,9 @@ class TestAcceptance(TestCase):
             "underline": underline
         }
         result1 = u"\n".join([u" {{ Book Title }} ",
-                             u".................."])
+                              u".................."])
         result2 = u"\n".join([u" {{ Book Title }} ",
-                             u"----------"])
+                              u"----------"])
         self.assertRender(template1, context, result1, helpers)
         self.assertRender(template2, context, result2, helpers)
 
