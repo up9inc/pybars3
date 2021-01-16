@@ -372,8 +372,8 @@ def prepare(value, should_escape):
                 value = u'true' if value else u'false'
             else:
                 value = str_class(value)
-        if should_escape:
-            value = escape(value)
+        # if should_escape:
+        #     value = escape(value)
     return value
 
 
