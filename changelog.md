@@ -1,5 +1,9 @@
 # changelog
 
+## 0.9.10
+
+- Disable HTML escaping
+
 ## 0.9.9
 
 - Fix the error message for the undefined object attributes
