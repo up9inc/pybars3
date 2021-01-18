@@ -1,5 +1,9 @@
 # changelog
 
+## 0.9.11
+
+- Disable escaping line-feed characters in the grammar definition
+
 ## 0.9.10
 
 - Disable HTML escaping
