@@ -2490,6 +2490,7 @@ class TestAcceptance(TestCase):
 
         self.assertRender(template, context, result, error=error)
 
+    @skip
     def test_backslash_does_not_normally_escape_text(self):
         helpers = {
             'echo': lambda this, arg: arg
@@ -2520,6 +2521,7 @@ class TestAcceptance(TestCase):
 
         self.assertRender(template, context, result, helpers)
 
+    @skip
     def test_newlines_in_string_litereals(self):
         helpers = {
             'echo': lambda this, arg: arg

@@ -100,14 +100,8 @@ true ::= 't' 'r' 'u' 'e' => True
 null ::= ('n' 'u' 'l' 'l') => None
 undefined ::= ('u' 'n' 'd' 'e' 'f' 'i' 'n' 'e' 'd') => None
 notdquote ::= <escapedquote>
-    | '\n' => '\\n'
-    | '\r' => '\\r'
-    | '\\' => '\\\\'
     | (~('"') <anything>)
 notsquote ::= <escapedquote>
-    | '\n' => '\\n'
-    | '\r' => '\\r'
-    | '\\' => '\\\\'
     | (~("'") <anything>)
 escapedquote ::= '\\' '"' => '\\"'
     | "\\" "'" => "\\'"
