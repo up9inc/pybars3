@@ -1,5 +1,9 @@
 # changelog
 
+## 0.9.12
+
+- Partially solved the thread-safety issues.
+
 ## 0.9.11
 
 - Disable escaping line-feed characters in the grammar definition
