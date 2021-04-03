@@ -757,6 +757,8 @@ class Compiler:
     state in CodeBuilder.
     """
 
+    _handlebars = OMeta.makeGrammar(handlebars_grammar, {}, 'handlebars')
+
     def __init__(self):
         # this grammar compiles the template to python
         compile_grammar = """
@@ -793,7 +795,6 @@ pathseg ::= <anything>:symbol => u''.join(symbol)
 """  # noqa: E501
 
         compile_grammar = compile_grammar.format(str_class=str_class.__name__)
-        self._handlebars = OMeta.makeGrammar(handlebars_grammar, {}, 'handlebars')
         self._builder = CodeBuilder()
         self._compiler = OMeta.makeGrammar(compile_grammar, {'builder': self._builder})
 
