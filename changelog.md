@@ -1,5 +1,9 @@
 # changelog
 
+## 0.9.13
+
+- Reverted the changes that come with version `0.9.12`.
+
 ## 0.9.12
 
 - Partially solved the thread-safety issues.
