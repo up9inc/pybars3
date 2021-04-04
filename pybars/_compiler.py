@@ -129,6 +129,41 @@ rawblock ::= <rawblockstart>:i (~(<rawblockfinish i[0]>) <anything>)*:r <rawbloc
     => ('rawblock',) + i + (''.join(r),)
 """
 
+# this grammar compiles the template to python
+compile_grammar = """
+compile ::= <prolog> <rule>* => builder.finish()
+prolog ::= "template" => builder.start()
+rule ::= <literal>
+    | <expand>
+    | <escapedexpand>
+    | <comment>
+    | <block>
+    | <invertedblock>
+    | <rawblock>
+    | <partial>
+block ::= [ "block" <anything>:symbol [<arg>*:arguments] [<compile>:t] [<compile>?:alt_t] ] => builder.add_block(symbol, arguments, t, alt_t)
+comment ::= [ "comment" ]
+literal ::= [ ( "literal" | "newline" | "whitespace" ) :value ] => builder.add_literal(value)
+expand ::= [ "expand" <path>:value [<arg>*:arguments]] => builder.add_expand(value, arguments)
+escapedexpand ::= [ "escapedexpand" <path>:value [<arg>*:arguments]] => builder.add_escaped_expand(value, arguments)
+invertedblock ::= [ "invertedblock" <anything>:symbol [<arg>*:arguments] [<compile>:t] [<compile>?:alt_t] ] => builder.add_invertedblock(symbol, arguments, t, alt_t)
+rawblock ::= [ "rawblock" <anything>:symbol [<arg>*:arguments] <anything>:raw ] => builder.add_rawblock(symbol, arguments, raw)
+partial ::= ["partial" <complexarg>:symbol [<arg>*:arguments]] => builder.add_partial(symbol, arguments)
+path ::= [ "path" [<pathseg>:segment]] => ("simple", segment)
+ | [ "path" [<pathseg>+:segments] ] => ("complex", u"resolve(context, problems, u'" + u"', u'".join(segments) + u"')" )
+complexarg ::= [ "path" [<pathseg>+:segments] ] => u"resolve(context, problems, u'" + u"', u'".join(segments) + u"')"
+    | [ "subexpr" ["path" <anything>:name] [<arg>*:arguments] ] => u'resolve_subexpr(helpers, "' + '.'.join(name) + '", context' + (u', ' + u', '.join(arguments) if arguments else u'') + u')'
+    | [ "literalparam" <anything>:value ] => {str_class}(value)
+arg ::= [ "kwparam" <anything>:symbol <complexarg>:a ] => {str_class}(symbol) + '=' + a
+    | <complexarg>
+pathseg ::= "/" => ''
+    | "." => ''
+    | "" => ''
+    | "this" => ''
+pathseg ::= <anything>:symbol => u''.join(symbol)
+"""  # noqa: E501
+compile_grammar = compile_grammar.format(str_class=str_class.__name__)
+
 
 class PybarsError(Exception):
 
@@ -199,6 +234,9 @@ def pick(context, name, default=None):
         if hasattr(context, 'get'):
             return context.get(name)
         return default
+
+
+sentinel = object()
 
 
 class Scope:
@@ -757,46 +795,11 @@ class Compiler:
     state in CodeBuilder.
     """
 
+    _handlebars = OMeta.makeGrammar(handlebars_grammar, {}, 'handlebars')
+    _builder = CodeBuilder()
+    _compiler = OMeta.makeGrammar(compile_grammar, {'builder': _builder})
+
     def __init__(self):
-        # this grammar compiles the template to python
-        compile_grammar = """
-compile ::= <prolog> <rule>* => builder.finish()
-prolog ::= "template" => builder.start()
-rule ::= <literal>
-    | <expand>
-    | <escapedexpand>
-    | <comment>
-    | <block>
-    | <invertedblock>
-    | <rawblock>
-    | <partial>
-block ::= [ "block" <anything>:symbol [<arg>*:arguments] [<compile>:t] [<compile>?:alt_t] ] => builder.add_block(symbol, arguments, t, alt_t)
-comment ::= [ "comment" ]
-literal ::= [ ( "literal" | "newline" | "whitespace" ) :value ] => builder.add_literal(value)
-expand ::= [ "expand" <path>:value [<arg>*:arguments]] => builder.add_expand(value, arguments)
-escapedexpand ::= [ "escapedexpand" <path>:value [<arg>*:arguments]] => builder.add_escaped_expand(value, arguments)
-invertedblock ::= [ "invertedblock" <anything>:symbol [<arg>*:arguments] [<compile>:t] [<compile>?:alt_t] ] => builder.add_invertedblock(symbol, arguments, t, alt_t)
-rawblock ::= [ "rawblock" <anything>:symbol [<arg>*:arguments] <anything>:raw ] => builder.add_rawblock(symbol, arguments, raw)
-partial ::= ["partial" <complexarg>:symbol [<arg>*:arguments]] => builder.add_partial(symbol, arguments)
-path ::= [ "path" [<pathseg>:segment]] => ("simple", segment)
- | [ "path" [<pathseg>+:segments] ] => ("complex", u"resolve(context, problems, u'" + u"', u'".join(segments) + u"')" )
-complexarg ::= [ "path" [<pathseg>+:segments] ] => u"resolve(context, problems, u'" + u"', u'".join(segments) + u"')"
-    | [ "subexpr" ["path" <anything>:name] [<arg>*:arguments] ] => u'resolve_subexpr(helpers, "' + '.'.join(name) + '", context' + (u', ' + u', '.join(arguments) if arguments else u'') + u')'
-    | [ "literalparam" <anything>:value ] => {str_class}(value)
-arg ::= [ "kwparam" <anything>:symbol <complexarg>:a ] => {str_class}(symbol) + '=' + a
-    | <complexarg>
-pathseg ::= "/" => ''
-    | "." => ''
-    | "" => ''
-    | "this" => ''
-pathseg ::= <anything>:symbol => u''.join(symbol)
-"""  # noqa: E501
-
-        compile_grammar = compile_grammar.format(str_class=str_class.__name__)
-        self._handlebars = OMeta.makeGrammar(handlebars_grammar, {}, 'handlebars')
-        self._builder = CodeBuilder()
-        self._compiler = OMeta.makeGrammar(compile_grammar, {'builder': self._builder})
-
         self._helpers = {}
         self.template_counter = 1
 
